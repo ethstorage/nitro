@@ -13,7 +13,17 @@
 </p>
 
 ## build wasm
-`tinygo build -o target/replay.wasm -target=wasm cmd/replay/main.go`
+### prerequisites
+follow arbitrum [build nitro tutorial](https://docs.arbitrum.io/node-running/how-tos/build-nitro-locally) to install requirements (Don't make, all you'll have to clean the builded file)
+
+### build replay.wasm
+```
+git submodule update --init
+
+make build # There will be some errors, because we have removed some code. So the linux build will fail. It's fine!
+
+tinygo build -o target/replay.wasm -target=wasm cmd/replay/main.go
+```
 
 ## About Arbitrum Nitro
 
