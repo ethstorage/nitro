@@ -1,9 +1,11 @@
 [submodule "go-ethereum"]
 	path = go-ethereum
-	url = https://github.com/OffchainLabs/go-ethereum.git
+	url = https://github.com/ethstorage/arb-go-ethereum.git 
+	branch= tinygo-wasm
 [submodule "fastcache"]
 	path = fastcache
-	url = https://github.com/OffchainLabs/fastcache.git
+	url = https://github.com/ethstorage/fastcache.git 
+	branch= tinygo-wasm
 [submodule "arbitrator/wasm-libraries/soft-float/SoftFloat"]
 	path = arbitrator/wasm-libraries/soft-float/SoftFloat
 	url = https://github.com/OffchainLabs/SoftFloat.git
@@ -19,4 +21,5 @@
 	url = https://github.com/WebAssembly/testsuite.git
 [submodule "nitro-testnode"]
 	path = nitro-testnode
-	url = https://github.com/OffchainLabs/nitro-testnode.git
+	url = https://github.com/ethstorage/nitro-testnode.git 
+	branch= tinygo-wasm
