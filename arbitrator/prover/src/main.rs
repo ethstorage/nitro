@@ -197,7 +197,7 @@ fn main() -> Result<()> {
         writeln!(module_root_file, "0x{}", mach.get_modules_root())?;
         module_root_file.flush()?;
 
-        mach.serialize_binary(output_path.join("machine.wavm.br"))?;
+        // mach.serialize_binary(output_path.join("machine.wavm.br"))?;
         while !mach.next_instruction_is_host_io() {
             mach.step_n(1)?;
         }

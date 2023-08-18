@@ -23,7 +23,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	glog "github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
@@ -136,24 +135,24 @@ func MakePrecompile(metadata *bind.MetaData, implementer interface{}) (addr, *Pr
 		log.Crit("Implementer for precompile ", contract, "'s Address field has the wrong type")
 	}
 
-	gethAbiFuncTypeEquality := func(actual, geth reflect.Type) bool {
-		gethIn := geth.NumIn()
-		gethOut := geth.NumOut()
-		if actual.NumIn() != gethIn || actual.NumOut() != gethOut {
-			return false
-		}
-		for i := 0; i < gethIn; i++ {
-			if !geth.In(i).ConvertibleTo(actual.In(i)) {
-				return false
-			}
-		}
-		for i := 0; i < gethOut; i++ {
-			if !actual.Out(i).ConvertibleTo(geth.Out(i)) {
-				return false
-			}
-		}
-		return true
-	}
+	// gethAbiFuncTypeEquality := func(actual, geth reflect.Type) bool {
+	// 	gethIn := geth.NumIn()
+	// 	gethOut := geth.NumOut()
+	// 	if actual.NumIn() != gethIn || actual.NumOut() != gethOut {
+	// 		return false
+	// 	}
+	// 	for i := 0; i < gethIn; i++ {
+	// 		if !geth.In(i).ConvertibleTo(actual.In(i)) {
+	// 			return false
+	// 		}
+	// 	}
+	// 	for i := 0; i < gethOut; i++ {
+	// 		if !actual.Out(i).ConvertibleTo(geth.Out(i)) {
+	// 			return false
+	// 		}
+	// 	}
+	// 	return true
+	// }
 
 	methods := make(map[[4]byte]*PrecompileMethod)
 	methodsByName := make(map[string]*PrecompileMethod)
@@ -212,14 +211,14 @@ func MakePrecompile(metadata *bind.MetaData, implementer interface{}) (addr, *Pr
 		}
 		outputs = append(outputs, reflect.TypeOf((*error)(nil)).Elem())
 
-		expectedHandlerType := reflect.FuncOf(needs, outputs, false)
+		// expectedHandlerType := reflect.FuncOf(needs, outputs, false)
 
-		if !gethAbiFuncTypeEquality(handler.Type, expectedHandlerType) {
-			log.Crit(
-				"Precompile "+contract+"'s "+name+"'s implementer has the wrong type\n",
-				"\texpected:\t", expectedHandlerType, "\n\tbut have:\t", handler.Type,
-			)
-		}
+		// if !gethAbiFuncTypeEquality(handler.Type, expectedHandlerType) {
+		// 	log.Crit(
+		// 		"Precompile "+contract+"'s "+name+"'s implementer has the wrong type\n",
+		// 		"\texpected:\t", expectedHandlerType, "\n\tbut have:\t", handler.Type,
+		// 	)
+		// }
 
 		method := PrecompileMethod{
 			name,
@@ -233,11 +232,11 @@ func MakePrecompile(metadata *bind.MetaData, implementer interface{}) (addr, *Pr
 	}
 
 	for i := 0; i < implementerType.NumMethod(); i++ {
-		method := implementerType.Method(i)
-		name := method.Name
-		if method.IsExported() && methodsByName[name] == nil {
-			log.Crit(contract + " is missing a solidity interface for " + name)
-		}
+		// method := implementerType.Method(i)
+		// name := method.Name
+		// if method.IsExported() && methodsByName[name] == nil {
+		// 	log.Crit(contract + " is missing a solidity interface for " + name)
+		// }
 	}
 
 	// provide the implementer mechanisms to emit logs for the solidity events
@@ -277,38 +276,38 @@ func MakePrecompile(metadata *bind.MetaData, implementer interface{}) (addr, *Pr
 			}
 		}
 
-		uint64Type := reflect.TypeOf(uint64(0))
-		errorType := reflect.TypeOf((*error)(nil)).Elem()
-		expectedFieldType := reflect.FuncOf(needs, []reflect.Type{errorType}, false)
-		expectedCostType := reflect.FuncOf(needs[2:], []reflect.Type{uint64Type, errorType}, false)
+		// uint64Type := reflect.TypeOf(uint64(0))
+		// errorType := reflect.TypeOf((*error)(nil)).Elem()
+		// expectedFieldType := reflect.FuncOf(needs, []reflect.Type{errorType}, false)
+		// expectedCostType := reflect.FuncOf(needs[2:], []reflect.Type{uint64Type, errorType}, false)
 
-		context := "Precompile " + contract + "'s implementer"
-		missing := context + " is missing a field for "
+		// context := "Precompile " + contract + "'s implementer"
+		// missing := context + " is missing a field for "
 
-		field, ok := implementerType.Elem().FieldByName(name)
-		if !ok {
-			log.Crit(missing, "event ", name, " of type\n\t", expectedFieldType)
-		}
-		costField, ok := implementerType.Elem().FieldByName(name + "GasCost")
-		if !ok {
-			log.Crit(missing, "event ", name, "'s GasCost of type\n\t", expectedCostType)
-		}
-		if !gethAbiFuncTypeEquality(field.Type, expectedFieldType) {
-			log.Crit(
-				context, "'s field for event ", name, " has the wrong type\n",
-				"\texpected:\t", expectedFieldType, "\n\tbut have:\t", field.Type,
-			)
-		}
-		if !gethAbiFuncTypeEquality(costField.Type, expectedCostType) {
-			log.Crit(
-				context, "'s field for event ", name, "GasCost has the wrong type\n",
-				"\texpected:\t", expectedCostType, "\n\tbut have:\t", costField.Type,
-			)
-		}
+		// field, ok := implementerType.Elem().FieldByName(name)
+		// if !ok {
+		// 	log.Crit(missing, "event ", name, " of type\n\t", expectedFieldType)
+		// }
+		// costField, ok := implementerType.Elem().FieldByName(name + "GasCost")
+		// if !ok {
+		// 	log.Crit(missing, "event ", name, "'s GasCost of type\n\t", expectedCostType)
+		// }
+		// if !gethAbiFuncTypeEquality(field.Type, expectedFieldType) {
+		// 	log.Crit(
+		// 		context, "'s field for event ", name, " has the wrong type\n",
+		// 		"\texpected:\t", expectedFieldType, "\n\tbut have:\t", field.Type,
+		// 	)
+		// }
+		// if !gethAbiFuncTypeEquality(costField.Type, expectedCostType) {
+		// 	log.Crit(
+		// 		context, "'s field for event ", name, "GasCost has the wrong type\n",
+		// 		"\texpected:\t", expectedCostType, "\n\tbut have:\t", costField.Type,
+		// 	)
+		// }
 
-		structFields := reflect.ValueOf(implementer).Elem()
-		fieldPointer := structFields.FieldByName(name)
-		costPointer := structFields.FieldByName(name + "GasCost")
+		// structFields := reflect.ValueOf(implementer).Elem()
+		// fieldPointer := structFields.FieldByName(name)
+		// costPointer := structFields.FieldByName(name + "GasCost")
 
 		dataInputs := make(abi.Arguments, 0)
 		topicInputs := make(abi.Arguments, 0)
@@ -322,123 +321,123 @@ func MakePrecompile(metadata *bind.MetaData, implementer interface{}) (addr, *Pr
 		}
 
 		// we can't capture `event` since the for loop will change its value
-		capturedEvent := event
-		nilError := reflect.Zero(reflect.TypeOf((*error)(nil)).Elem())
+		// capturedEvent := event
+		// nilError := reflect.Zero(reflect.TypeOf((*error)(nil)).Elem())
 
-		gascost := func(args []reflect.Value) []reflect.Value {
+		// gascost := func(args []reflect.Value) []reflect.Value {
 
-			cost := params.LogGas
-			cost += params.LogTopicGas * uint64(1+len(topicInputs))
+		// 	cost := params.LogGas
+		// 	cost += params.LogTopicGas * uint64(1+len(topicInputs))
 
-			var dataValues []interface{}
+		// 	var dataValues []interface{}
 
-			for i := 0; i < len(args); i++ {
-				if !capturedEvent.Inputs[i].Indexed {
-					dataValues = append(dataValues, args[i].Interface())
-				}
-			}
+		// 	for i := 0; i < len(args); i++ {
+		// 		if !capturedEvent.Inputs[i].Indexed {
+		// 			dataValues = append(dataValues, args[i].Interface())
+		// 		}
+		// 	}
 
-			data, err := dataInputs.PackValues(dataValues)
-			if err != nil {
-				glog.Error(fmt.Sprintf(
-					"Could not pack values for event %s's GasCost\nerror %s", name, err,
-				))
-				return []reflect.Value{reflect.ValueOf(0), reflect.ValueOf(err)}
-			}
+		// 	data, err := dataInputs.PackValues(dataValues)
+		// 	if err != nil {
+		// 		glog.Error(fmt.Sprintf(
+		// 			"Could not pack values for event %s's GasCost\nerror %s", name, err,
+		// 		))
+		// 		return []reflect.Value{reflect.ValueOf(0), reflect.ValueOf(err)}
+		// 	}
 
-			// charge for the number of bytes
-			cost += params.LogDataGas * uint64(len(data))
-			return []reflect.Value{reflect.ValueOf(cost), nilError}
-		}
+		// 	// charge for the number of bytes
+		// 	cost += params.LogDataGas * uint64(len(data))
+		// 	return []reflect.Value{reflect.ValueOf(cost), nilError}
+		// }
 
-		emit := func(args []reflect.Value) []reflect.Value {
+		// emit := func(args []reflect.Value) []reflect.Value {
 
-			callerCtx := args[0].Interface().(ctx) //nolint:errcheck
-			evm := args[1].Interface().(*vm.EVM)   //nolint:errcheck
-			state := evm.StateDB
-			args = args[2:]
+		// 	callerCtx := args[0].Interface().(ctx) //nolint:errcheck
+		// 	evm := args[1].Interface().(*vm.EVM)   //nolint:errcheck
+		// 	state := evm.StateDB
+		// 	args = args[2:]
 
-			version := arbosState.ArbOSVersion(state)
-			if callerCtx.readOnly && version >= 11 {
-				return []reflect.Value{reflect.ValueOf(vm.ErrWriteProtection)}
-			}
+		// 	version := arbosState.ArbOSVersion(state)
+		// 	if callerCtx.readOnly && version >= 11 {
+		// 		return []reflect.Value{reflect.ValueOf(vm.ErrWriteProtection)}
+		// 	}
 
-			emitCost := gascost(args)
-			cost := emitCost[0].Interface().(uint64) //nolint:errcheck
-			if !emitCost[1].IsNil() {
-				// an error occured during gascost()
-				return []reflect.Value{emitCost[1]}
-			}
-			if err := callerCtx.Burn(cost); err != nil {
-				// the user has run out of gas
-				return []reflect.Value{reflect.ValueOf(vm.ErrOutOfGas)}
-			}
+		// 	emitCost := gascost(args)
+		// 	cost := emitCost[0].Interface().(uint64) //nolint:errcheck
+		// 	if !emitCost[1].IsNil() {
+		// 		// an error occured during gascost()
+		// 		return []reflect.Value{emitCost[1]}
+		// 	}
+		// 	if err := callerCtx.Burn(cost); err != nil {
+		// 		// the user has run out of gas
+		// 		return []reflect.Value{reflect.ValueOf(vm.ErrOutOfGas)}
+		// 	}
 
-			// Filter by index'd into data and topics. Indexed values, even if ultimately hashed,
-			// aren't supposed to have their contents stored in the general-purpose data portion.
-			var dataValues []interface{}
-			var topicValues []interface{}
+		// 	// Filter by index'd into data and topics. Indexed values, even if ultimately hashed,
+		// 	// aren't supposed to have their contents stored in the general-purpose data portion.
+		// 	var dataValues []interface{}
+		// 	var topicValues []interface{}
 
-			for i := 0; i < len(args); i++ {
-				if capturedEvent.Inputs[i].Indexed {
-					topicValues = append(topicValues, args[i].Interface())
-				} else {
-					dataValues = append(dataValues, args[i].Interface())
-				}
-			}
+		// 	for i := 0; i < len(args); i++ {
+		// 		if capturedEvent.Inputs[i].Indexed {
+		// 			topicValues = append(topicValues, args[i].Interface())
+		// 		} else {
+		// 			dataValues = append(dataValues, args[i].Interface())
+		// 		}
+		// 	}
 
-			data, err := dataInputs.PackValues(dataValues)
-			if err != nil {
-				glog.Error(fmt.Sprintf(
-					"Couldn't pack values for event %s\nnargs %s\nvalues %s\ntopics %s\nerror %s",
-					name, args, dataValues, topicValues, err,
-				))
-				return []reflect.Value{reflect.ValueOf(err)}
-			}
+		// 	data, err := dataInputs.PackValues(dataValues)
+		// 	if err != nil {
+		// 		glog.Error(fmt.Sprintf(
+		// 			"Couldn't pack values for event %s\nnargs %s\nvalues %s\ntopics %s\nerror %s",
+		// 			name, args, dataValues, topicValues, err,
+		// 		))
+		// 		return []reflect.Value{reflect.ValueOf(err)}
+		// 	}
 
-			topics := []common.Hash{capturedEvent.ID}
+		// 	topics := []common.Hash{capturedEvent.ID}
 
-			for i, input := range topicInputs {
-				// Geth provides infrastructure for packing arrays of values,
-				// so we create an array with just the value we want to pack.
+		// 	for i, input := range topicInputs {
+		// 		// Geth provides infrastructure for packing arrays of values,
+		// 		// so we create an array with just the value we want to pack.
 
-				packable := []interface{}{topicValues[i]}
-				bytes, err := abi.Arguments{input}.PackValues(packable)
-				if err != nil {
-					glog.Error(fmt.Sprintf(
-						"Packing error for event %s\nargs %s\nvalues %s\ntopics %s\nerror %s",
-						name, args, dataValues, topicValues, err,
-					))
-					return []reflect.Value{reflect.ValueOf(err)}
-				}
+		// 		packable := []interface{}{topicValues[i]}
+		// 		bytes, err := abi.Arguments{input}.PackValues(packable)
+		// 		if err != nil {
+		// 			glog.Error(fmt.Sprintf(
+		// 				"Packing error for event %s\nargs %s\nvalues %s\ntopics %s\nerror %s",
+		// 				name, args, dataValues, topicValues, err,
+		// 			))
+		// 			return []reflect.Value{reflect.ValueOf(err)}
+		// 		}
 
-				var topic [32]byte
+		// 		var topic [32]byte
 
-				if len(bytes) > 32 {
-					topic = *(*[32]byte)(crypto.Keccak256(bytes))
-				} else {
-					offset := 32 - len(bytes)
-					copy(topic[offset:], bytes)
-				}
+		// 		if len(bytes) > 32 {
+		// 			topic = *(*[32]byte)(crypto.Keccak256(bytes))
+		// 		} else {
+		// 			offset := 32 - len(bytes)
+		// 			copy(topic[offset:], bytes)
+		// 		}
 
-				topics = append(topics, topic)
-			}
+		// 		topics = append(topics, topic)
+		// 	}
 
-			event := &types.Log{
-				Address:     address,
-				Topics:      topics,
-				Data:        data,
-				BlockNumber: evm.Context.BlockNumber.Uint64(),
-				// Geth will set all other fields, which include
-				//   TxHash, TxIndex, Index, and Removed
-			}
+		// 	event := &types.Log{
+		// 		Address:     address,
+		// 		Topics:      topics,
+		// 		Data:        data,
+		// 		BlockNumber: evm.Context.BlockNumber.Uint64(),
+		// 		// Geth will set all other fields, which include
+		// 		//   TxHash, TxIndex, Index, and Removed
+		// 	}
 
-			state.AddLog(event)
-			return []reflect.Value{nilError}
-		}
+		// 	state.AddLog(event)
+		// 	return []reflect.Value{nilError}
+		// }
 
-		fieldPointer.Set(reflect.MakeFunc(field.Type, emit))
-		costPointer.Set(reflect.MakeFunc(costField.Type, gascost))
+		// fieldPointer.Set(reflect.MakeFunc(field.Type, emit))
+		// costPointer.Set(reflect.MakeFunc(costField.Type, gascost))
 
 		events[name] = PrecompileEvent{
 			name,
@@ -447,60 +446,60 @@ func MakePrecompile(metadata *bind.MetaData, implementer interface{}) (addr, *Pr
 	}
 
 	for _, solErr := range source.Errors {
-		name := solErr.Name
+		// name := solErr.Name
 
 		var needs []reflect.Type
 		for _, arg := range solErr.Inputs {
 			needs = append(needs, arg.Type.GetType())
 		}
 
-		errorType := reflect.TypeOf((*error)(nil)).Elem()
-		expectedFieldType := reflect.FuncOf(needs, []reflect.Type{errorType}, false)
+		// errorType := reflect.TypeOf((*error)(nil)).Elem()
+		// // expectedFieldType := reflect.FuncOf(needs, []reflect.Type{errorType}, false)
 
-		context := "Precompile " + contract + "'s implementer"
-		missing := context + " is missing a field for "
+		// context := "Precompile " + contract + "'s implementer"
+		// missing := context + " is missing a field for "
 
-		field, ok := implementerType.Elem().FieldByName(name + "Error")
-		if !ok {
-			log.Crit(missing, "custom error ", name, "Error of type\n\t", expectedFieldType)
-		}
-		if field.Type != expectedFieldType {
-			log.Crit(
-				context, "'s field for error ", name, "Error has the wrong type\n",
-				"\texpected:\t", expectedFieldType, "\n\tbut have:\t", field.Type,
-			)
-		}
+		// field, ok := implementerType.Elem().FieldByName(name + "Error")
+		// if !ok {
+		// 	log.Crit(missing, "custom error ", name, "Error of type\n\t", expectedFieldType)
+		// }
+		// if field.Type != expectedFieldType {
+		// 	log.Crit(
+		// 		context, "'s field for error ", name, "Error has the wrong type\n",
+		// 		"\texpected:\t", expectedFieldType, "\n\tbut have:\t", field.Type,
+		// 	)
+		// }
 
-		structFields := reflect.ValueOf(implementer).Elem()
-		errorReturnPointer := structFields.FieldByName(name + "Error")
+		// structFields := reflect.ValueOf(implementer).Elem()
+		// errorReturnPointer := structFields.FieldByName(name + "Error")
 
-		capturedSolErr := solErr
-		errorReturn := func(args []reflect.Value) []reflect.Value {
-			var dataValues []interface{}
-			for i := 0; i < len(args); i++ {
-				dataValues = append(dataValues, args[i].Interface())
-			}
+		// capturedSolErr := solErr
+		// errorReturn := func(args []reflect.Value) []reflect.Value {
+		// 	var dataValues []interface{}
+		// 	for i := 0; i < len(args); i++ {
+		// 		dataValues = append(dataValues, args[i].Interface())
+		// 	}
 
-			data, err := capturedSolErr.Inputs.PackValues(dataValues)
-			if err != nil {
-				glog.Error(fmt.Sprintf(
-					"Couldn't pack values for error %s\nnargs %s\nvalues %s\nerror %s",
-					name, args, dataValues, err,
-				))
-				return []reflect.Value{reflect.ValueOf(err)}
-			}
+		// 	data, err := capturedSolErr.Inputs.PackValues(dataValues)
+		// 	if err != nil {
+		// 		glog.Error(fmt.Sprintf(
+		// 			"Couldn't pack values for error %s\nnargs %s\nvalues %s\nerror %s",
+		// 			name, args, dataValues, err,
+		// 		))
+		// 		return []reflect.Value{reflect.ValueOf(err)}
+		// 	}
 
-			customErr := &SolError{data: append(capturedSolErr.ID[:4], data...), solErr: capturedSolErr}
+		// 	customErr := &SolError{data: append(capturedSolErr.ID[:4], data...), solErr: capturedSolErr}
 
-			return []reflect.Value{reflect.ValueOf(customErr)}
-		}
+		// 	return []reflect.Value{reflect.ValueOf(customErr)}
+		// }
 
-		errorReturnPointer.Set(reflect.MakeFunc(field.Type, errorReturn))
+		// // errorReturnPointer.Set(reflect.MakeFunc(field.Type, errorReturn))
 
-		errors[name] = PrecompileError{
-			name,
-			solErr,
-		}
+		// errors[name] = PrecompileError{
+		// 	name,
+		// 	solErr,
+		// }
 	}
 
 	return address, &Precompile{

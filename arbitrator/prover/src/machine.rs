@@ -1165,67 +1165,67 @@ impl Machine {
         Ok(mach)
     }
 
-    pub fn new_from_wavm(wavm_binary: &Path) -> Result<Machine> {
-        let f = BufReader::new(File::open(wavm_binary)?);
-        let decompressor = brotli2::read::BrotliDecoder::new(f);
-        let mut modules: Vec<Module> = bincode::deserialize_from(decompressor)?;
-        for module in modules.iter_mut() {
-            for table in module.tables.iter_mut() {
-                table.elems_merkle = Merkle::new(
-                    MerkleType::TableElement,
-                    table.elems.iter().map(TableElement::hash).collect(),
-                );
-            }
-            let tables: Result<_> = module.tables.iter().map(Table::hash).collect();
-            module.tables_merkle = Merkle::new(MerkleType::Table, tables?);
+    // pub fn new_from_wavm(wavm_binary: &Path) -> Result<Machine> {
+    //     let f = BufReader::new(File::open(wavm_binary)?);
+    //     let decompressor = brotli2::read::BrotliDecoder::new(f);
+    //     let mut modules: Vec<Module> = bincode::deserialize_from(decompressor)?;
+    //     for module in modules.iter_mut() {
+    //         for table in module.tables.iter_mut() {
+    //             table.elems_merkle = Merkle::new(
+    //                 MerkleType::TableElement,
+    //                 table.elems.iter().map(TableElement::hash).collect(),
+    //             );
+    //         }
+    //         let tables: Result<_> = module.tables.iter().map(Table::hash).collect();
+    //         module.tables_merkle = Merkle::new(MerkleType::Table, tables?);
 
-            let funcs =
-                Arc::get_mut(&mut module.funcs).expect("Multiple copies of module functions");
-            for func in funcs.iter_mut() {
-                func.code_merkle = Merkle::new(
-                    MerkleType::Instruction,
-                    func.code.par_iter().map(|i| i.hash()).collect(),
-                );
-            }
-            module.funcs_merkle = Arc::new(Merkle::new(
-                MerkleType::Function,
-                module.funcs.iter().map(Function::hash).collect(),
-            ));
-        }
-        let mut mach = Machine {
-            status: MachineStatus::Running,
-            steps: 0,
-            value_stack: vec![Value::RefNull, Value::I32(0), Value::I32(0)],
-            internal_stack: Vec::new(),
-            frame_stack: Vec::new(),
-            modules,
-            modules_merkle: None,
-            global_state: Default::default(),
-            pc: ProgramCounter::default(),
-            stdio_output: Vec::new(),
-            inbox_contents: Default::default(),
-            first_too_far: 0,
-            preimage_resolver: PreimageResolverWrapper::new(get_empty_preimage_resolver()),
-            initial_hash: Bytes32::default(),
-            context: 0,
-        };
-        mach.initial_hash = mach.hash();
-        Ok(mach)
-    }
+    //         let funcs =
+    //             Arc::get_mut(&mut module.funcs).expect("Multiple copies of module functions");
+    //         for func in funcs.iter_mut() {
+    //             func.code_merkle = Merkle::new(
+    //                 MerkleType::Instruction,
+    //                 func.code.par_iter().map(|i| i.hash()).collect(),
+    //             );
+    //         }
+    //         module.funcs_merkle = Arc::new(Merkle::new(
+    //             MerkleType::Function,
+    //             module.funcs.iter().map(Function::hash).collect(),
+    //         ));
+    //     }
+    //     let mut mach = Machine {
+    //         status: MachineStatus::Running,
+    //         steps: 0,
+    //         value_stack: vec![Value::RefNull, Value::I32(0), Value::I32(0)],
+    //         internal_stack: Vec::new(),
+    //         frame_stack: Vec::new(),
+    //         modules,
+    //         modules_merkle: None,
+    //         global_state: Default::default(),
+    //         pc: ProgramCounter::default(),
+    //         stdio_output: Vec::new(),
+    //         inbox_contents: Default::default(),
+    //         first_too_far: 0,
+    //         preimage_resolver: PreimageResolverWrapper::new(get_empty_preimage_resolver()),
+    //         initial_hash: Bytes32::default(),
+    //         context: 0,
+    //     };
+    //     mach.initial_hash = mach.hash();
+    //     Ok(mach)
+    // }
 
-    pub fn serialize_binary<P: AsRef<Path>>(&self, path: P) -> Result<()> {
-        ensure!(
-            self.hash() == self.initial_hash,
-            "serialize_binary can only be called on initial machine",
-        );
-        let mut f = File::create(path)?;
-        let mut compressor = brotli2::write::BrotliEncoder::new(BufWriter::new(&mut f), 9);
-        bincode::serialize_into(&mut compressor, &self.modules)?;
-        compressor.flush()?;
-        drop(compressor);
-        f.sync_data()?;
-        Ok(())
-    }
+    // pub fn serialize_binary<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+    //     ensure!(
+    //         self.hash() == self.initial_hash,
+    //         "serialize_binary can only be called on initial machine",
+    //     );
+    //     let mut f = File::create(path)?;
+    //     let mut compressor = brotli2::write::BrotliEncoder::new(BufWriter::new(&mut f), 9);
+    //     bincode::serialize_into(&mut compressor, &self.modules)?;
+    //     compressor.flush()?;
+    //     drop(compressor);
+    //     f.sync_data()?;
+    //     Ok(())
+    // }
 
     pub fn serialize_state<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let mut f = File::create(path)?;
